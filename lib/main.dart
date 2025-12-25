@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'bloc/calculator_cubit.dart';
+import 'bloc/cart_cubit.dart';
 import 'pages/home_page.dart';
+import 'pages/cart_page.dart';
+import 'pages/about_page.dart';
 
 void main() {
   runApp(
     BlocProvider(
-      create: (_) => CalculatorCubit(),
+      create: (_) => CartCubit(),
       child: const MyApp(),
     ),
   );
@@ -18,13 +20,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Calculator BLoC',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ),
-      home: const HomePage(),
+      title: 'Toko Online Sederhana',
       debugShowCheckedModeBanner: false,
+      initialRoute: '/',
+      routes: {
+        '/': (_) => const HomePage(),
+        '/cart': (_) => const CartPage(),
+        '/about': (_) => const AboutPage(),
+      },
     );
   }
 }

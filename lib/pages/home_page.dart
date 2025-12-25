@@ -1,138 +1,92 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/calculator_cubit.dart';
-import '../bloc/calculator_state.dart';
+import '../bloc/cart_cubit.dart';
+import '../bloc/cart_state.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
+
+  List<Product> get products => const [
+        Product(name: "Kaos", price: 75000),
+        Product(name: "Celana", price: 150000),
+        Product(name: "Topi", price: 50000),
+        Product(name: "Sepatu", price: 100000),
+      ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kalkulator BLoC'),
+        title: const Text("Toko Online"),
         actions: [
           IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              _showHistory(context);
-            },
+            icon: const Icon(Icons.info_outline),
+            onPressed: () =>
+                Navigator.pushNamed(context, '/about'),
           ),
-          IconButton(
-            icon: const Icon(Icons.clear),
-            onPressed: () {
-              context.read<CalculatorCubit>().clearHistory();
-            },
-          ),
+          _buildCartIcon(context),
         ],
       ),
-      body: BlocBuilder<CalculatorCubit, CalculatorState>(
-        builder: (context, state) {
-          return Column(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  alignment: Alignment.bottomRight,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        state.expression,
-                        style: const TextStyle(fontSize: 24),
-                      ),
-                      if (state.result.isNotEmpty)
-                        Text(
-                          state.result,
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      if (state.error != null)
-                        Text(
-                          state.error!,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 18,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+      body: ListView.builder(
+        itemCount: products.length,
+        itemBuilder: (context, index) {
+          final p = products[index];
+          return Card(
+            margin: const EdgeInsets.all(8),
+            child: ListTile(
+              title: Text(p.name),
+              subtitle: Text("Rp ${p.price}"),
+              trailing: ElevatedButton(
+                onPressed: () {
+                  context.read<CartCubit>().addToCart(p);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Produk ditambahkan"),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+                child: const Text("Tambah"),
               ),
-              const Divider(),
-              _buildButtons(context),
-            ],
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildButtons(BuildContext context) {
-    final cubit = context.read<CalculatorCubit>();
-    return GridView.count(
-      crossAxisCount: 4,
-      shrinkWrap: true,
-      children: [
-        _buildButton('7', () => cubit.input('7')),
-        _buildButton('8', () => cubit.input('8')),
-        _buildButton('9', () => cubit.input('9')),
-        _buildButton('÷', () => cubit.input('÷')),
-        _buildButton('4', () => cubit.input('4')),
-        _buildButton('5', () => cubit.input('5')),
-        _buildButton('6', () => cubit.input('6')),
-        _buildButton('×', () => cubit.input('×')),
-        _buildButton('1', () => cubit.input('1')),
-        _buildButton('2', () => cubit.input('2')),
-        _buildButton('3', () => cubit.input('3')),
-        _buildButton('-', () => cubit.input('-')),
-        _buildButton('0', () => cubit.input('0')),
-        _buildButton('.', () => cubit.input('.')),
-        _buildButton('⌫', () => cubit.backspace()),
-        _buildButton('+', () => cubit.input('+')),
-        _buildButton('C', () => cubit.clear()),
-        _buildButton('=', () => cubit.calculate()),
-      ],
-    );
-  }
-
-  Widget _buildButton(String text, VoidCallback onPressed) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      child: Text(text, style: const TextStyle(fontSize: 20)),
-    );
-  }
-
-  void _showHistory(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Riwayat'),
-          content: BlocBuilder<CalculatorCubit, CalculatorState>(
-            builder: (context, state) {
-              return SizedBox(
-                width: double.maxFinite,
-                child: ListView(
-                  shrinkWrap: true,
-                  children: state.history
-                      .map((item) => ListTile(title: Text(item)))
-                      .toList(),
-                ),
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Tutup'),
-            ),
-          ],
-        );
-      },
+  Widget _buildCartIcon(BuildContext context) {
+    return InkWell(
+      onTap: () => Navigator.pushNamed(context, '/cart'),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: BlocBuilder<CartCubit, CartState>(
+          builder: (context, state) {
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.shopping_cart),
+                if (state.totalItems > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: CircleAvatar(
+                      radius: 8,
+                      backgroundColor: Colors.red,
+                      child: Text(
+                        state.totalItems.toString(),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }
